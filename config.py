@@ -1,5 +1,5 @@
 class groqConf:
-    api_key = "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"
+    api_key = "your_groq_api_key_here"  # Replace with your actual Groq API key
 
 class deny_lists:
     medications = [
