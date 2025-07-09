@@ -13,8 +13,7 @@ A command-line tool for identifying and anonymizing Personally Identifiable Info
 
 1. **Clone the repository:**
     ```sh
-    git clone <your-repo-url>
-    cd PII_Identification
+    git clone https://github.com/sbsahan/PII_Identification
     ```
 
 2. **Install dependencies:**
