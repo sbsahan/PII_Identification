@@ -1,8 +1,5 @@
-
-
-from presidio_analyzer import AnalyzerEngine, LemmaContextAwareEnhancer, PatternRecognizer
+from presidio_analyzer import AnalyzerEngine, LemmaContextAwareEnhancer
 from presidio_anonymizer import AnonymizerEngine
-from presidio_analyzer.nlp_engine import NlpEngineProvider
 import config
 
 from groq import Groq
@@ -12,12 +9,6 @@ from identifiers.MAC_Identifier import MACRecognizer
 from identifiers.Medication_Identifier import MedicationRecognizer
 from identifiers.TCKN_Identifier import TCKNRecognizer  
 from commands import get_commands
-
-configuration = {
-    "nlp_engine_name": "stanza",
-    "models": {"lang_code": "en", "model_name": "en"},
-}
-
 
 client = Groq(
     api_key=config.groqConf.api_key,

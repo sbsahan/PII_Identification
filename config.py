@@ -1,10 +1,12 @@
 class groqConf:
-    api_key = "your_groq_api_key_here"  # Replace with your actual Groq API key
+    api_key = ""  # Replace with your actual Groq API key
 
 class deny_lists:
     medications = [
-        "acetaminophen", "ibuprofen", "aspirin", "amoxicillin", "penicillin", "erythromycin", "clindamycin", "metronidazole", 
-        "ciprofloxacin", "morphine", "codeine", "diazepam", "lorazepam", "sertraline", "fluoxetine", "metformin", "insulin", 
+        "acetaminophen", "ibuprofen", "aspirin", "amoxicillin", 
+        "penicillin", "erythromycin", "clindamycin", "metronidazole", 
+        "ciprofloxacin", "morphine", "codeine", "diazepam", "lorazepam", 
+        "sertraline", "fluoxetine", "metformin", "insulin", 
         "salbutamol", "prednisolone", "tylenol", "advil", "aleve"
     ]
     blood_types = [
