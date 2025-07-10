@@ -1,5 +1,6 @@
 from presidio_analyzer import AnalyzerEngine, LemmaContextAwareEnhancer
 from presidio_anonymizer import AnonymizerEngine
+from colorama import Fore, Style, init
 import config
 
 from groq import Groq
@@ -9,15 +10,25 @@ from identifiers.MAC_Identifier import MACRecognizer
 from identifiers.Medication_Identifier import MedicationRecognizer
 from identifiers.TCKN_Identifier import TCKNRecognizer  
 from commands import get_commands
+import style_utils as su
+
+init(autoreset=True)
 
 client = Groq(
     api_key=config.groqConf.api_key,
 )
 
-selectedModel = "llama-3.3-70b-versatile"
-models = client.models.list()
-indexed_models = [f"[{i}] {model.id}" for i, model in enumerate(models.data)]
-
+selectedModel = "compound-beta"
+model_ids = [
+    "deepseek-r1-distill-llama-70b",
+    "gemma2-9b-it",
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "qwen/qwen3-32b",
+    "compound-beta",
+    "compound-beta-mini"
+]
 
 medication_recognizer = MedicationRecognizer()
 blood_type_recognizer = BTRecognizer()
@@ -34,14 +45,16 @@ analyzer.registry.add_recognizer(mac_address_recognizer)
 
 anonymizer = AnonymizerEngine()
 
-print("You are now chatting with", selectedModel, "!")
+print(su.dim("You are now chatting with"), 
+      su.cyan(selectedModel), 
+      su.dim("!"))
 
 messagesSent = []
 selectedModel_ref = [selectedModel]  # Use a mutable reference for selectedModel
 
 
 while True:
-    text = input()
+    text = input(su.user_label() + " ")
     if text.startswith("!"):
         command = text.lower()
         commands = get_commands()
@@ -50,14 +63,16 @@ while True:
             if command == "!clear":
                 action(messagesSent)
             elif command == "!models":
-                action(indexed_models, models, selectedModel_ref)
+                action(model_ids, selectedModel_ref, messagesSent)
                 selectedModel = selectedModel_ref[0]
             else:
                 result = action()
                 if result == 'break':
                     break
         else:
-            print("Unknown command. Type !help for a list of commands.")
+            print(su.dim("Unknown command. Type"), 
+                  su.cyan("!help"), 
+                  su.dim("for a list of commands."))
         continue
     
     analyzer_results = analyzer.analyze(text=text, language="en", score_threshold=0.2)
@@ -65,10 +80,19 @@ while True:
     anonymizer_results = anonymizer.anonymize(text=text, analyzer_results=analyzer_results)
 
     if anonymizer_results.text != text:
-        print("PII identified, your message has been anonymized to: ", anonymizer_results.text)
-        print("Wrongly identified PII? Type 'y' to send the original message,'n' to send the anonymized message or 'c' to cancel sending the message.")
+        print(su.dim("PII identified, your message has been anonymized to:"), 
+              su.yellow(anonymizer_results.text)
+        )
+        print(su.dim("Wrongly identified PII? Type"), 
+              su.green('\"y\"'), 
+              su.dim("to send the original message,"), 
+              su.magenta('\"n\"'), 
+              su.dim("to send the anonymized message or"), 
+              su.red('\"c\"'), 
+              su.dim("to cancel sending the message.")
+        )
         
-        textoverride = input().lower()
+        textoverride = input(su.user_label() + " ").lower()
         inputGiven = False
         
         while not inputGiven:
@@ -85,20 +109,25 @@ while True:
                 })
                 inputGiven = True
             elif textoverride == "c":
-                print("Message sending cancelled.")
+                print(su.dim("Message sending cancelled."))
                 inputGiven = True
             else:
-                print("Invalid input. Please type 'y' to send the original message or 'n' to send the anonymized message.")
-                textoverride = input().lower()
+                print(su.dim("Invalid input. Please type"), 
+                      su.green('\"y\"'), 
+                      su.dim("to send the original message or"), 
+                      su.magenta('\"n\"'), 
+                      su.dim("to send the anonymized message."))
+                textoverride = input(su.user_label() + " ").lower()
     else:
         messagesSent.append({
             "role": "user",
             "content": anonymizer_results.text
         })
 
-    a = client.chat.completions.create(
-        messages=messagesSent,
-        model=selectedModel,
-    )
+    if len(messagesSent) > 0:
+        a = client.chat.completions.create(
+            messages=messagesSent,
+            model=selectedModel,
+        )
 
-    print(a.choices[0].message.content)
+        print(su.assistant_label(), a.choices[0].message.content)

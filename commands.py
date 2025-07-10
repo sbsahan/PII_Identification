@@ -1,33 +1,48 @@
 # commands.py
-
+import style_utils as su
 def cmd_exit():
-    print("Exiting chat. Goodbye!")
+    print(su.dim("Exiting chat. Goodbye!"))
     return 'break'
 
 def cmd_clear(messagesSent):
     messagesSent = []
-    print("Chat history cleared.")
+    print(su.dim("Chat history cleared."))
 
-def cmd_models(indexed_models, models, selectedModel):
-    for line in indexed_models:
-        print(line)
+def cmd_models(model_ids, selectedModel, messagesSent=None):
+    # Sort the model_ids alphabetically
+    sorted_models = sorted(model_ids, key=lambda x: x.lower())
+    for i, model_id in enumerate(sorted_models):
+        print(f"[{su.cyan(str(i))}] {su.dim(model_id)}")
     try:
-        selected_index = int(input("Select a model by entering its index (e.g., 0 for the first model):"))
-        if 0 <= selected_index < len(models.data):
-            selectedModel[0] = models.data[selected_index].id
-            print(f"You selected: {selectedModel[0]}")
-            print("You are now chatting with", selectedModel[0], "!")
+        selected_index = int(input(su.yellow("Select a model by entering its index (e.g., 0 for the first model):")))
+        if 0 <= selected_index < len(sorted_models):
+            selectedModel[0] = sorted_models[selected_index]
+            print(su.dim("Model changed to:"), 
+                  su.cyan(selectedModel[0]))
+            print(su.dim("Now you are chatting with"), 
+                  su.cyan(selectedModel[0]), 
+                  su.dim("!"))
+            # Clear chat history if messagesSent is provided
+            if messagesSent is not None:
+                messagesSent.clear()
+                print(su.dim("Chat history cleared due to model change."))
         else:
-            print("Invalid index.")
+            print(su.dim("Invalid index."))
     except ValueError:
-        print("Please enter a valid number.")
+        print(su.dim("Please enter a valid number."))
+    
 
 def cmd_help():
-    print("Available commands:")
-    print("!exit - Exit the chat")
-    print("!clear - Clear the chat history")
-    print("!models - Show available models")
-    print("!help - Show this help message")
+    print(su.dim("Available commands:\n"),
+          su.cyan("!exit"), 
+          su.dim("- Exit the chat\n"),
+          su.cyan("!clear"),
+          su.dim("- Clear the chat history\n"),
+          su.cyan("!models"),
+          su.dim("- Show available models\n"),
+          su.cyan("!help"),
+          su.dim("- Show this help message")
+    )
 
 def get_commands():
     return {
