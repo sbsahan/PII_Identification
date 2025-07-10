@@ -52,10 +52,3 @@ A command-line tool for identifying and anonymizing Personally Identifiable Info
 - **Add new recognizers:** Place new recognizer classes in the `identifiers/` folder and register them in `main.py`.
 - **Update deny lists or patterns:** Edit `config.py` as needed.
 
-## License
-
-This project is for educational and research purposes. Review and comply with the licenses of Presidio, Groq, and any other dependencies you use.
-
----
-
-*Created with Python, Presidio, and Groq.*
