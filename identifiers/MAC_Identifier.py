@@ -1,4 +1,6 @@
-print("MAC_Identifier.py loaded")
+import utils
+
+utils.dim("MAC_Recognizer loaded")
 
 from presidio_analyzer import Pattern, PatternRecognizer
 import config

@@ -1,4 +1,6 @@
-print("BT_Identifier.py loaded")
+import utils
+
+utils.dim("BT_Recognizer loaded")
 
 from presidio_analyzer import PatternRecognizer
 import config

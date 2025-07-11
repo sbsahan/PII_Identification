@@ -1,6 +1,7 @@
+from time import sleep
 from presidio_analyzer import AnalyzerEngine, LemmaContextAwareEnhancer
 from presidio_anonymizer import AnonymizerEngine
-from colorama import Fore, Style, init
+from colorama import init
 import config
 
 from groq import Groq
@@ -10,7 +11,7 @@ from identifiers.MAC_Identifier import MACRecognizer
 from identifiers.Medication_Identifier import MedicationRecognizer
 from identifiers.TCKN_Identifier import TCKNRecognizer  
 from commands import get_commands
-import style_utils as su
+import utils
 
 init(autoreset=True)
 
@@ -18,17 +19,8 @@ client = Groq(
     api_key=config.groqConf.api_key,
 )
 
-selectedModel = "compound-beta"
-model_ids = [
-    "deepseek-r1-distill-llama-70b",
-    "gemma2-9b-it",
-    "llama-3.1-8b-instant",
-    "llama-3.3-70b-versatile",
-    "meta-llama/llama-4-maverick-17b-128e-instruct",
-    "qwen/qwen3-32b",
-    "compound-beta",
-    "compound-beta-mini"
-]
+selectedModel = config.groqConf.selectedModel
+model_ids = config.groqConf.model_ids
 
 medication_recognizer = MedicationRecognizer()
 blood_type_recognizer = BTRecognizer()
@@ -45,16 +37,14 @@ analyzer.registry.add_recognizer(mac_address_recognizer)
 
 anonymizer = AnonymizerEngine()
 
-print(su.dim("You are now chatting with"), 
-      su.cyan(selectedModel), 
-      su.dim("!"))
+utils.outputText.chattingWith()
 
 messagesSent = []
 selectedModel_ref = [selectedModel]  # Use a mutable reference for selectedModel
 
 
 while True:
-    text = input(su.user_label() + " ")
+    text = input(utils.user_label() + " ")
     if text.startswith("!"):
         command = text.lower()
         commands = get_commands()
@@ -70,29 +60,17 @@ while True:
                 if result == 'break':
                     break
         else:
-            print(su.dim("Unknown command. Type"), 
-                  su.cyan("!help"), 
-                  su.dim("for a list of commands."))
+            utils.outputText.unknownCommand()
         continue
     
     analyzer_results = analyzer.analyze(text=text, language="en", score_threshold=0.2)
-    print(analyzer_results)
     anonymizer_results = anonymizer.anonymize(text=text, analyzer_results=analyzer_results)
+    
 
     if anonymizer_results.text != text:
-        print(su.dim("PII identified, your message has been anonymized to:"), 
-              su.yellow(anonymizer_results.text)
-        )
-        print(su.dim("Wrongly identified PII? Type"), 
-              su.green('\"y\"'), 
-              su.dim("to send the original message,"), 
-              su.magenta('\"n\"'), 
-              su.dim("to send the anonymized message or"), 
-              su.red('\"c\"'), 
-              su.dim("to cancel sending the message.")
-        )
+        utils.outputText.messageAnonymized(anonymizer_results.text)
         
-        textoverride = input(su.user_label() + " ").lower()
+        textoverride = input(utils.user_label() + " ").lower()
         inputGiven = False
         
         while not inputGiven:
@@ -109,15 +87,11 @@ while True:
                 })
                 inputGiven = True
             elif textoverride == "c":
-                print(su.dim("Message sending cancelled."))
+                utils.outputText.messageCancelled()
                 inputGiven = True
             else:
-                print(su.dim("Invalid input. Please type"), 
-                      su.green('\"y\"'), 
-                      su.dim("to send the original message or"), 
-                      su.magenta('\"n\"'), 
-                      su.dim("to send the anonymized message."))
-                textoverride = input(su.user_label() + " ").lower()
+                utils.outputText.invalidInput()
+                textoverride = input(utils.user_label() + " ").lower()
     else:
         messagesSent.append({
             "role": "user",
@@ -125,9 +99,14 @@ while True:
         })
 
     if len(messagesSent) > 0:
-        a = client.chat.completions.create(
+        completion = client.chat.completions.create(
             messages=messagesSent,
             model=selectedModel,
+            stream=True,
         )
-
-        print(su.assistant_label(), a.choices[0].message.content)
+        print(utils.assistant_label(), end=" ")
+        for chunk in completion:
+            print(chunk.choices[0].delta.content or "", end="")
+            sleep(0.02)
+        print("")
+        
